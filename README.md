@@ -2,10 +2,16 @@
 
 Very light weight and opinionated migration framework. It only supports "up" migrations, PostgreSQL database, golang app, `jackc/pgx` database client, `int64` migration keys. You get to pick the table and column name. 
 
-Shell command to get a new migration key from the current time.
+Shell command to get a new migration key:
 
 ```sh
 $ date +%s
+```
+
+Go import path:
+
+```
+github.com/aj0strow/jackc-pgx-migrate
 ```
 
 ## Example
@@ -15,7 +21,7 @@ package main
 
 import (
   "context"
-  "github.com/aj0strow/migrate/jackc-pgx-migrate"
+  "github.com/aj0strow/jackc-pgx-migrate"
   "github.com/jackc/pgx"
   "log"
   "os"
