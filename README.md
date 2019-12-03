@@ -37,7 +37,7 @@ func migrate() {
   m := migrate.New()
 
   m.Set(1575346891, func(tx *pgx.Tx) error {
-    migrate.Run(tx, []string{
+    return migrate.Run(tx, []string{
       `CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         email TEXT NOT NULL
