@@ -60,7 +60,7 @@ func migrate() {
 Complex migration updating lots of data:
 
 ```go
-  m[1577567921] func(ctx context.Context, tx pgx.Tx) error {
+  m[1577567921] = func(ctx context.Context, tx pgx.Tx) error {
     // do whatever you want
     store := &Store{Tx: tx}
   }
@@ -69,12 +69,21 @@ Complex migration updating lots of data:
 Simple migration running commands:
 
 ```go
-  m[1577567921] func(ctx context.Context, tx pgx.Tx) error {
+  m[1577567921] = func(ctx context.Context, tx pgx.Tx) error {
     return migrate.Run(ctx, tx, []string{
       `CREATE TABLE ...`,
       `CREATE INDEX ...`,
     })
   }
+```
+
+Shorthand for simple migration commands:
+
+```go
+  m[1577569133] = migrate.Commands(
+    `CREATE TABLE ...`,
+    `CREATE INDEX ...`,
+  )
 ```
 
 Adding migrations from different parts of the app:

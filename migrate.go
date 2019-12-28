@@ -10,6 +10,12 @@ import (
 
 type Funcs map[int64]func(context.Context, pgx.Tx) error
 
+func Commands(qs ...string) func(context.Context, pgx.Tx) error {
+	return func(ctx context.Context, tx pgx.Tx) error {
+		return Run(ctx, tx, qs)
+	}
+}
+
 // Helper for running multiple commands in sequence.
 func Run(ctx context.Context, tx pgx.Tx, qs []string) error {
 	for _, q := range qs {

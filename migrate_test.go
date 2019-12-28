@@ -12,17 +12,15 @@ import (
 func TestMigrate(t *testing.T) {
 	ctx := context.Background()
 	m := Funcs{}
-	m[1577566714] = func(ctx context.Context, tx pgx.Tx) error {
-		return Run(ctx, tx, []string{
-			`CREATE TABLE users (
-				id SERIAL NOT NULL,
-				email TEXT NOT NULL,
-				created_at TIMESTAMPTZ,
-				updated_at TIMESTAMPTZ
-			)`,
-			`CREATE UNIQUE INDEX users_email_key ON users (email)`,
-		})
-	}
+	m[1577566714] = Commands(
+		`CREATE TABLE users (
+			id SERIAL NOT NULL,
+			email TEXT NOT NULL,
+			created_at TIMESTAMPTZ,
+			updated_at TIMESTAMPTZ
+		)`,
+		`CREATE UNIQUE INDEX users_email_key ON users (email)`,
+	)
 	m[1577566893] = func(ctx context.Context, tx pgx.Tx) error {
 		_, err := tx.Exec(ctx, `ALTER TABLE users ADD COLUMN password_digest BYTEA`)
 		return err
