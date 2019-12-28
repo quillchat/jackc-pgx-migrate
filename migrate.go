@@ -3,14 +3,17 @@ package migrate
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx"
 	"sort"
+
+	"github.com/jackc/pgx/v4"
 )
 
+type Funcs map[int64]func(context.Context, pgx.Tx) error
+
 // Helper for running multiple commands in sequence.
-func Run(tx *pgx.Tx, qs []string) error {
+func Run(ctx context.Context, tx pgx.Tx, qs []string) error {
 	for _, q := range qs {
-		_, err := tx.Exec(q)
+		_, err := tx.Exec(ctx, q)
 		if err != nil {
 			return err
 		}
@@ -18,42 +21,21 @@ func Run(tx *pgx.Tx, qs []string) error {
 	return nil
 }
 
-func New() *Migrate {
-	return &Migrate{
-		Table:  "migrations",
-		Column: "mts",
-		funcs:  make(map[int64]func(*pgx.Tx) error),
-	}
-}
-
-type Migrate struct {
-	Table  string
-	Column string
-	funcs  map[int64]func(*pgx.Tx) error
-}
-
-func (m *Migrate) Set(k int64, txFunc func(*pgx.Tx) error) {
-	m.funcs[k] = txFunc
-}
-
-func (m *Migrate) Exec(conn *pgx.Conn) error {
+func Migrate(ctx context.Context, conn *pgx.Conn, funcs Funcs) error {
 	var ks []int64
-	for k := range m.funcs {
+	for k := range funcs {
 		ks = append(ks, k)
 	}
 	sort.Slice(ks, func(i, j int) bool {
 		return ks[i] < ks[j]
 	})
-	ctx := context.Background()
-	q1 := fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (`%s` BIGINT PRIMARY KEY)", m.Table, m.Column)
-	_, err := conn.Exec(ctx, q1)
+	_, err := conn.Exec(ctx, `CREATE TABLE IF NOT EXISTS migrations (mts BIGINT PRIMARY KEY)`)
 	if err != nil {
 		return err
 	}
 	for _, k := range ks {
-		q2 := fmt.Sprintf("SELECT 1 FROM `%s` WHERE `%s` = $1", m.Table, m.Column)
 		var exists int
-		err := conn.QueryRow(ctx, q2, k).Scan(&exists)
+		err := conn.QueryRow(ctx, `SELECT 1 FROM migrations WHERE mts = $1`, k).Scan(&exists)
 		if err != nil && err != pgx.ErrNoRows {
 			return err
 		}
@@ -64,21 +46,33 @@ func (m *Migrate) Exec(conn *pgx.Conn) error {
 		if err != nil {
 			return err
 		}
-		err = m.funcs[k](tx)
+		err = funcs[k](ctx, tx)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback(ctx)
+			return &Error{Err: err, Key: k}
+		}
+		_, err = tx.Exec(ctx, `INSERT INTO migrations (mts) VALUES ($1)`, k)
+		if err != nil {
+			tx.Rollback(ctx)
 			return err
 		}
-		q3 := fmt.Sprintf("INSERT INTO `%s` (`%s`) VALUES ($1)", m.Table, m.Columns)
-		_, err = tx.Exec(ctx, q3, k)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-		err = tx.Commit()
+		err = tx.Commit(ctx)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+type Error struct {
+	Err error
+	Key int64
+}
+
+func (e *Error) Error() string {
+	return fmt.Sprintf("migrate %d: %v", e.Key, e.Err)
+}
+
+func (e *Error) Unwrap() error {
+	return e.Err
 }
