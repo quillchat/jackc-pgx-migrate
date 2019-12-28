@@ -82,3 +82,45 @@ func (e *Error) Error() string {
 func (e *Error) Unwrap() error {
 	return e.Err
 }
+
+func Log(printer Printer) *Logger {
+	return &Logger{Printer: printer}
+}
+
+type Logger struct {
+	Printer Printer
+}
+
+func (l *Logger) Commands(qs ...string) func(context.Context, pgx.Tx) error {
+	return func(ctx context.Context, tx pgx.Tx) error {
+		l.print("BEGIN")
+		err := l.Run(ctx, tx, qs)
+		if err != nil {
+			l.print("ROLLBACK")
+			return err
+		}
+		l.print("COMMIT")
+		return nil
+	}
+}
+
+func (l *Logger) Run(ctx context.Context, tx pgx.Tx, qs []string) error {
+	for _, q := range qs {
+		l.print(q)
+		_, err := tx.Exec(ctx, q)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (l *Logger) print(v string) {
+	if l.Printer != nil {
+		l.Printer.Printf("%s\n", v)
+	}
+}
+
+type Printer interface {
+	Printf(string, ...interface{})
+}

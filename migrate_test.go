@@ -12,7 +12,7 @@ import (
 func TestMigrate(t *testing.T) {
 	ctx := context.Background()
 	m := Funcs{}
-	m[1577566714] = Commands(
+	m[1577566714] = Log(nil).Commands(
 		`CREATE TABLE users (
 			id SERIAL NOT NULL,
 			email TEXT NOT NULL,

@@ -86,6 +86,30 @@ Shorthand for simple migration running commands:
   )
 ```
 
+Log commands during a more complex migration:
+
+```go
+  logger := log.New(os.Stdout, "", 0)
+
+  m[1577567921] = func(ctx context.Context, tx pgx.Tx) error {
+    return migrate.Log(logger).Run(ctx, tx, []string{
+      `CREATE TABLE ...`,
+      `CREATE INDEX ...`,
+    })
+  }
+```
+
+Log commands while running them:
+
+```go
+  logger := log.New(os.Stdout, "", 0)
+
+  m[1577571429] = migrate.Log(logger).Commands(
+    `CREATE TABLE ...`,
+    `CREATE INDEX ...`,
+  )
+```
+
 Adding migrations from different parts of the app:
 
 ```go
