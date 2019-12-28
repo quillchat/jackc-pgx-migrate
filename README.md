@@ -1,6 +1,6 @@
 # Simple Migrations for `jackc/pgx`
 
-Quick and opinionated migration framework. It only supports "up" migrations, PostgreSQL database, golang app, `jackc/pgx` database client, `int64` migration keys. It will create a new database table `migrations` with primary key `mts` for migration unix timestamp. 
+Quick and opinionated migration framework. It only supports "up" migrations, PostgreSQL database, golang app, `jackc/pgx` database client, `int64` migration keys. It will create a new database table `migrations` with primary key `mts` which stands for *migration unix timestamp*. 
 
 Shell command to create a new migration key:
 
