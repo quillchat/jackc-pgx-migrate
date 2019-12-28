@@ -77,7 +77,7 @@ Simple migration running commands:
   }
 ```
 
-Shorthand for simple migration commands:
+Shorthand for simple migration running commands:
 
 ```go
   m[1577569133] = migrate.Commands(
