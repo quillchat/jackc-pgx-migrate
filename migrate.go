@@ -98,20 +98,20 @@ type Logger struct {
 
 func (l *Logger) Commands(qs ...string) func(context.Context, pgx.Tx) error {
 	return func(ctx context.Context, tx pgx.Tx) error {
-		l.print("BEGIN")
+		l.Printf("BEGIN")
 		err := l.Run(ctx, tx, qs)
 		if err != nil {
-			l.print("ROLLBACK")
+			l.Printf("ROLLBACK")
 			return err
 		}
-		l.print("COMMIT")
+		l.Printf("COMMIT")
 		return nil
 	}
 }
 
 func (l *Logger) Run(ctx context.Context, tx pgx.Tx, qs []string) error {
 	for _, q := range qs {
-		l.print(q)
+		l.Printf(q)
 		_, err := tx.Exec(ctx, q)
 		if err != nil {
 			return err
@@ -120,9 +120,9 @@ func (l *Logger) Run(ctx context.Context, tx pgx.Tx, qs []string) error {
 	return nil
 }
 
-func (l *Logger) print(v string) {
+func (l *Logger) Printf(s string, v ...interface{}) {
 	if l.Printer != nil {
-		l.Printer.Printf("%s\n", v)
+		l.Printer.Printf(s, v...)
 	}
 }
 
