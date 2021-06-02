@@ -50,7 +50,7 @@ func Migrate(ctx context.Context, conn *pgx.Conn, funcs Funcs, logger *Logger) e
 			continue
 		}
 
-		logger.Printf("Executing migration: %d\n", k)
+		logger.Printf("Executing migration: %d", k)
 		start := time.Now()
 		tx, err := conn.Begin(ctx)
 		if err != nil {
@@ -70,7 +70,7 @@ func Migrate(ctx context.Context, conn *pgx.Conn, funcs Funcs, logger *Logger) e
 		if err != nil {
 			return err
 		}
-		logger.Printf("Executed migration: %d, took %0.2f seconds\n", k, time.Now().Sub(start).Seconds())
+		logger.Printf("Executed migration: %d, took %0.5f seconds", k, time.Now().Sub(start).Seconds())
 	}
 	return nil
 }
