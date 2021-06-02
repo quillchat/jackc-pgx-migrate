@@ -1,4 +1,4 @@
-module github.com/aj0strow/jackc-pgx-migrate/v4
+module github.com/quillchat/jackc-pgx-migrate/v4
 
 go 1.15
 
