@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/jackc/pgx/v4"
 )
@@ -27,7 +28,7 @@ func Run(ctx context.Context, tx pgx.Tx, qs []string) error {
 	return nil
 }
 
-func Migrate(ctx context.Context, conn *pgx.Conn, funcs Funcs) error {
+func Migrate(ctx context.Context, conn *pgx.Conn, funcs Funcs, logger *Logger) error {
 	var ks []int64
 	for k := range funcs {
 		ks = append(ks, k)
@@ -48,6 +49,9 @@ func Migrate(ctx context.Context, conn *pgx.Conn, funcs Funcs) error {
 		if exists == 1 {
 			continue
 		}
+
+		logger.Printf("Executing migration: %d\n", k)
+		start := time.Now()
 		tx, err := conn.Begin(ctx)
 		if err != nil {
 			return err
@@ -66,6 +70,7 @@ func Migrate(ctx context.Context, conn *pgx.Conn, funcs Funcs) error {
 		if err != nil {
 			return err
 		}
+		logger.Printf("Executed migration: %d, took %0.2f seconds\n", k, time.Now().Sub(start).Seconds())
 	}
 	return nil
 }
